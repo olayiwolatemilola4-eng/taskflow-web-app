@@ -2,7 +2,6 @@ const STORAGE_KEY = 'taskflow-tasks';
 const THEME_KEY = 'taskflow-theme';
 let tasks = loadTasks();
 let activeFilter = 'all';
-let editingId = null;
 
 const elements = {
   form: document.querySelector('#taskForm'), taskInput: document.querySelector('#taskInput'), priority: document.querySelector('#priorityInput'), dueDate: document.querySelector('#dueDateInput'), message: document.querySelector('#formMessage'),
@@ -35,16 +34,17 @@ function render() {
 }
 
 function addTask(event) { event.preventDefault(); const title = elements.taskInput.value.trim(); if (!title) { elements.message.textContent = 'Please enter a task before adding it.'; elements.taskInput.focus(); return; } tasks.unshift({ id: makeId(), title, priority: elements.priority.value, dueDate: elements.dueDate.value, completed: false }); saveTasks(); elements.form.reset(); elements.priority.value = 'medium'; elements.message.textContent = ''; render(); elements.taskInput.focus(); }
-function openEdit(task) { editingId = task.id; elements.editInput.value = task.title; elements.editPriority.value = task.priority; elements.editDueDate.value = task.dueDate || ''; elements.dialog.hidden = false; elements.editInput.focus(); }
-function closeEdit() { elements.dialog.hidden = true; editingId = null; }
+function getTaskById(id) { return tasks.find(task => String(task.id) === String(id)); }
+function openEdit(task) { if (!task) return; elements.editForm.dataset.taskId = task.id; elements.editInput.value = task.title; elements.editPriority.value = task.priority; elements.editDueDate.value = task.dueDate || ''; elements.dialog.hidden = false; elements.editInput.focus(); }
+function closeEdit() { elements.dialog.hidden = true; delete elements.editForm.dataset.taskId; }
 function applyTheme(theme) { document.body.classList.toggle('dark', theme === 'dark'); elements.theme.querySelector('span').textContent = theme === 'dark' ? '☀' : '☾'; elements.theme.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'); }
 
 elements.form.addEventListener('submit', addTask);
 elements.search.addEventListener('input', render);
 elements.filters.addEventListener('click', event => { const button = event.target.closest('[data-filter]'); if (!button) return; activeFilter = button.dataset.filter; document.querySelectorAll('.filter-button').forEach(item => { const selected = item === button; item.classList.toggle('active', selected); item.setAttribute('aria-pressed', selected); }); render(); });
-elements.list.addEventListener('change', event => { if (!event.target.matches('.task-checkbox')) return; const task = tasks.find(item => item.id === event.target.closest('.task-item').dataset.id); if (task) { task.completed = event.target.checked; saveTasks(); render(); } });
-elements.list.addEventListener('click', event => { const row = event.target.closest('.task-item'); if (!row) return; const task = tasks.find(item => item.id === row.dataset.id); if (event.target.closest('.edit-button')) openEdit(task); if (event.target.closest('.delete-button') && task) { tasks = tasks.filter(item => item.id !== task.id); saveTasks(); render(); } });
-elements.editForm.addEventListener('submit', event => { event.preventDefault(); const title = elements.editInput.value.trim(); if (!title) return; const task = tasks.find(item => item.id === editingId); if (task) { task.title = title; task.priority = elements.editPriority.value; task.dueDate = elements.editDueDate.value; saveTasks(); } closeEdit(); render(); });
+elements.list.addEventListener('change', event => { if (!event.target.matches('.task-checkbox')) return; const task = getTaskById(event.target.closest('.task-item').dataset.id); if (task) { task.completed = event.target.checked; saveTasks(); render(); } });
+elements.list.addEventListener('click', event => { const row = event.target.closest('.task-item'); if (!row) return; const task = getTaskById(row.dataset.id); if (event.target.closest('.edit-button')) openEdit(task); if (event.target.closest('.delete-button') && task) { tasks = tasks.filter(item => String(item.id) !== String(task.id)); saveTasks(); render(); } });
+elements.editForm.addEventListener('submit', event => { event.preventDefault(); const title = elements.editInput.value.trim(); if (!title) { elements.editInput.focus(); return; } const task = getTaskById(elements.editForm.dataset.taskId); if (!task) return; task.title = title; task.priority = elements.editPriority.value; task.dueDate = elements.editDueDate.value; saveTasks(); closeEdit(); render(); });
 [elements.closeEdit, elements.cancelEdit].forEach(button => button.addEventListener('click', closeEdit));
 elements.dialog.addEventListener('click', event => { if (event.target === elements.dialog) closeEdit(); });
 document.addEventListener('keydown', event => { if (event.key === 'Escape' && !elements.dialog.hidden) closeEdit(); });

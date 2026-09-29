@@ -110,14 +110,14 @@
   <div id="editDialog" class="modal-backdrop" hidden>
     <section class="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-heading">
       <div class="modal-header"><h2 id="edit-heading">Edit task</h2><button id="closeEdit" class="icon-button" type="button" aria-label="Close edit dialog">×</button></div>
-      <form id="editForm">
+      <form id="editForm" novalidate>
         <label for="editTaskInput">Task title</label>
-        <input id="editTaskInput" type="text" maxlength="120" required>
+        <input id="editTaskInput" name="editTask" type="text" maxlength="120" required>
         <div class="edit-fields">
           <div><label for="editPriorityInput">Priority</label><select id="editPriorityInput"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
           <div><label for="editDueDateInput">Due date</label><input id="editDueDateInput" type="date"></div>
         </div>
-        <div class="modal-actions"><button id="cancelEdit" class="secondary-button" type="button">Cancel</button><button class="primary-button" type="submit">Save changes</button></div>
+        <div class="modal-actions"><button id="cancelEdit" class="secondary-button" type="button">Cancel</button><button class="primary-button" type="submit" form="editForm">Save changes</button></div>
       </form>
     </section>
   </div>
